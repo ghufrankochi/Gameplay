@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple HTML Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f0f8ff;
+        }
+        h1 {
+            color: #333;
+        }
+        #game-area {
+            margin: 20px auto;
+            width: 300px;
+            height: 300px;
+            border: 2px solid #333;
+            position: relative;
+            background-color: #fff;
+        }
+        .treasure {
+            width: 50px;
+            height: 50px;
+            background-color: gold;
+            position: absolute;
+            border-radius: 50%;
+        }
+        #score {
+            font-size: 20px;
+            margin-top: 20px;
+        }
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #333;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #555;
+        }
+    </style>
+</head>
+<body>
+    <h1>Find the Treasure!</h1>
+    <div id="game-area"></div>
+    <div id="score">Score: 0</div>
+    <button id="save-score-btn">Save Score</button>
+
+    <script>
+        let score = 0;
+
+        const gameArea = document.getElementById('game-area');
+        const scoreDisplay = document.getElementById('score');
+        const saveScoreBtn = document.getElementById('save-score-btn');
+
+        // Function to create a random position for the treasure
+        function randomPosition() {
+            const x = Math.floor(Math.random() * (gameArea.clientWidth - 50));
+            const y = Math.floor(Math.random() * (gameArea.clientHeight - 50));
+            return { x, y };
+        }
+
+        // Function to spawn a treasure
+        function spawnTreasure() {
+            const { x, y } = randomPosition();
+            const treasure = document.createElement('div');
+            treasure.classList.add('treasure');
+            treasure.style.left = `${x}px`;
+            treasure.style.top = `${y}px`;
+            treasure.onclick = () => {
+                score++;
+                scoreDisplay.textContent = `Score: ${score}`;
+                treasure.remove();
+                spawnTreasure();
+            };
+            gameArea.appendChild(treasure);
+        }
+
+        // Save score to the server
+        saveScoreBtn.onclick = async () => {
+            try {
+                const response = await fetch('save_score.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ score: score }),
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    alert('Score saved successfully!');
+                } else {
+                    alert('Failed to save score.');
+                }
+            } catch (error) {
+                alert('Error saving score: ' + error.message);
+            }
+        };
+
+        // Start the game
+        spawnTreasure();
+    </script>
+</body>
+</html>
